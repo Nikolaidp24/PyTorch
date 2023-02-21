@@ -1,0 +1,3 @@
+[submodule "Rice"]
+	path = Rice
+	url = ./Rice
