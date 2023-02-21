@@ -2,6 +2,7 @@
 author: Nikolai Peisong Li
 """
 
+import numpy as np
 import os
 import torch
 import torchvision
@@ -203,14 +204,42 @@ optimizer = torch.optim.Adam(params=rice_model_0.parameters(),
 
 # wrap and main script and run, saving the state dict of this model
 if __name__ == '__main__':
-    final = train_model(
-        model=rice_model_0,
-        train_dataloader=train_dataloader,
-        test_dataloader=test_dataloader,
-        loss_function=loss_fn,
-        accuracy_function=acc_fn,
-        optim=optimizer,
-        epochs=3
-    )
-    torch.save(rice_model_0.state_dict(), 'rice_model_0_state_dict.pt')
-    # print(final)
+    run = input('Train model? (y/n): ')
+    if run == 'y':
+        final = train_model(
+            model=rice_model_0,
+            train_dataloader=train_dataloader,
+            test_dataloader=test_dataloader,
+            loss_function=loss_fn,
+            accuracy_function=acc_fn,
+            optim=optimizer,
+            epochs=3
+        )
+        torch.save(rice_model_0.state_dict(), 'rice_model_0_state_dict.pt')
+
+    elif run != 'n':
+        raise ValueError('Please enter either "y" or "n".')
+
+    else:
+        rice_model_loaded = RiceModelV0(input_shape=3,
+                                        output_shape=5,
+                                        hidden_units=10)
+        rice_model_loaded.load_state_dict(torch.load('rice_model_0_state_dict.pt'))
+        print('Trained model state dict successfully loaded!')
+
+        y_preds = []
+        rice_model_loaded.eval()
+        with torch.inference_mode():
+            print('Evaluating model...')
+            for batch, (X, y) in tqdm(enumerate(test_dataloader)):
+                y_logit = rice_model_loaded(X)
+                y_pred = torch.softmax(y_logit.squeeze(), dim=0).argmax(dim=1)
+                y_preds.append(y_pred)
+        y_preds_tensor = torch.cat(y_preds)
+
+        print('Plotting ConfusionMatrix...')
+        cm = ConfusionMatrix(task='multiclass', num_classes=len(class_names))
+        cm_tensor = cm(preds=y_preds_tensor, target=torch.tensor(test_data.targets))
+
+        plot_confusion_matrix(conf_mat=cm_tensor.numpy(), class_names=class_names)
+        plt.show()
