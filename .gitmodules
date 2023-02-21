@@ -4,6 +4,3 @@
 [submodule "test_data"]
 	path = Rice/Rice_Image_Dataset/test_data
 	url = ./test_data
-[submodule "Animals-10"]
-	path = Animals-10
-	url = ./Animals-10
