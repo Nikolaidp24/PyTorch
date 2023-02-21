@@ -2,5 +2,5 @@
 	path = Rice
 	url = ./Rice
 [submodule "test_data"]
-	path = test_data
+	path = Rice/Rice_Image_Dataset/test_data
 	url = ./test_data
