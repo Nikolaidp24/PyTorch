@@ -1,3 +1,7 @@
+"""
+author: Nikolai Peisong Li
+"""
+
 import os
 import torch
 import torchvision
@@ -16,6 +20,7 @@ from tqdm.auto import tqdm
 train_dir = 'Rice_Image_Dataset/train'
 test_dir = 'Rice_Image_Dataset/test'
 
+# setting different transform method of training and testing data
 train_transform = transforms.Compose([
     transforms.Resize(size=(64, 64)),
     transforms.TrivialAugmentWide(num_magnitude_bins=31),
@@ -27,6 +32,7 @@ test_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
+# using ImageFolder to load in the raw image data
 train_data = datasets.ImageFolder(root=train_dir,
                                   transform=train_transform,
                                   target_transform=None)
@@ -35,9 +41,13 @@ test_data = datasets.ImageFolder(root=test_dir,
                                  transform=test_transform,
                                  target_transform=None)
 
+# getting the class names
 class_names = train_data.classes
 
+# setting batch_size to speed up the training and testing cycle
 BATCH_SIZE = 128
+
+# create dataloaders for training and testing datasets using all cpus
 train_dataloader = DataLoader(dataset=train_data,
                               batch_size=BATCH_SIZE,
                               num_workers=os.cpu_count(),
@@ -49,6 +59,7 @@ test_dataloader = DataLoader(dataset=test_data,
                              shuffle=False)
 
 
+# Building Model_0 with 2 cnn block and relu activation function and flatten as the last step
 class RiceModelV0(nn.Module):
     def __init__(self, input_shape: int, output_shape: int, hidden_units: int):
         super().__init__()
@@ -100,12 +111,13 @@ class RiceModelV0(nn.Module):
         return self.classifier(self.block2(self.block1(x)))
 
 
+# building train_step function
 def train_step(model: nn.Module, loss_function: nn.Module, accuracy_function, optim: torch.optim.Optimizer,
                dataloader: torch.utils.data.DataLoader):
     model.train()
     train_loss, train_acc = 0, 0
     for batch, (X, y) in enumerate(dataloader):
-        X, y = X.to('mps'), y.to('mps')
+        # X, y = X.to('mps'), y.to('mps')
         y_pred = model(X)
         loss = loss_function(y_pred, y)
         train_loss += loss
@@ -119,12 +131,13 @@ def train_step(model: nn.Module, loss_function: nn.Module, accuracy_function, op
     return train_loss, train_acc
 
 
+# building test_step function
 def test_step(model: nn.Module, loss_function: nn.Module, accuracy_function, dataloader: torch.utils.data.DataLoader):
     model.eval()
     test_loss, test_acc = 0, 0
     with torch.inference_mode():
         for batch, (X, y) in enumerate(dataloader):
-            X, y = X.to('mps'), y.to('mps')
+            # X, y = X.to('mps'), y.to('mps')
             y_pred = model(X)
             test_loss += loss_function(y_pred, y)
             test_acc += accuracy_function(y_pred.argmax(dim=1), y)
@@ -134,6 +147,7 @@ def test_step(model: nn.Module, loss_function: nn.Module, accuracy_function, dat
     return test_loss, test_acc
 
 
+# combine training and testing steps, and append the result into a dictionary
 def train_model(
         model: nn.Module,
         train_dataloader: torch.utils.data.DataLoader,
@@ -149,7 +163,7 @@ def train_model(
         'test_loss': [],
         'test_acc': []
     }
-    for epoch in tqdm(range(epochs)):
+    for _ in tqdm(range(epochs)):
         train_loss, train_acc = train_step(model=model,
                                            loss_function=loss_function,
                                            accuracy_function=accuracy_function,
@@ -166,19 +180,28 @@ def train_model(
         results['test_loss'].append(test_loss)
         results['test_acc'].append(test_acc)
 
-        print(f'Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc*100:.2f}')
+        print(
+            f'Train Loss: {train_loss:.4f} | Train Acc: {train_acc * 100:.2f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc * 100:.2f}')
 
     return results
 
 
+# instantiate the model with 3 color channels, 10 hidden layers and outputs 5 classes
 rice_model_0 = RiceModelV0(input_shape=3,
                            output_shape=5,
-                           hidden_units=10).to('mps')
-acc_fn = Accuracy(task='multiclass', num_classes=len(class_names))
-loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(params=rice_model_0.parameters(),
-                            lr=0.1)
+                           hidden_units=10)
 
+# accuracy function using the built-in torchmetrics Accuracy module
+acc_fn = Accuracy(task='multiclass', num_classes=len(class_names))
+
+# CrossEntropyLoss because this is a multi-class classification problem
+loss_fn = nn.CrossEntropyLoss()
+
+# using Adam optimizer of learning rate=0.001
+optimizer = torch.optim.Adam(params=rice_model_0.parameters(),
+                             lr=0.001)
+
+# wrap and main script and run, saving the state dict of this model
 if __name__ == '__main__':
     final = train_model(
         model=rice_model_0,
@@ -189,5 +212,5 @@ if __name__ == '__main__':
         optim=optimizer,
         epochs=3
     )
-    print(final)
-
+    torch.save(rice_model_0.state_dict(), 'rice_model_0_state_dict.pt')
+    # print(final)
