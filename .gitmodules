@@ -1,3 +1,6 @@
 [submodule "Rice"]
 	path = Rice
 	url = ./Rice
+[submodule "test_data"]
+	path = test_data
+	url = ./test_data
