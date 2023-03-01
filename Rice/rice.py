@@ -233,7 +233,7 @@ if __name__ == '__main__':
             print('Evaluating model...')
             for batch, (X, y) in tqdm(enumerate(test_dataloader)):
                 y_logit = rice_model_loaded(X)
-                y_pred = torch.softmax(y_logit.squeeze(), dim=0).argmax(dim=1)
+                y_pred = torch.softmax(y_logit.squeeze(), dim=1).argmax(dim=1)
                 y_preds.append(y_pred)
         y_preds_tensor = torch.cat(y_preds)
 
