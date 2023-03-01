@@ -572,10 +572,9 @@ df_models_eval.iloc[2, 0] = 'Model_2'
 df_models_eval.iloc[3, 0] = 'Model_3'
 
 df_models_eval[['Model Name', 'Loss']].plot(kind='bar', color='orange')
-plt.xticks(ticks=[0, 1, 2, 3, 4] ,labels=list(df_models_eval['Model Name']), rotation=0)
+plt.xticks(ticks=[0, 1, 2, 3, 4], labels=list(df_models_eval['Model Name']), rotation=0)
 df_models_eval[['Model Name', 'Accuracy']].plot(kind='bar')
-plt.xticks(ticks=[0, 1, 2, 3, 4] ,labels=list(df_models_eval['Model Name']), rotation=0)
+plt.xticks(ticks=[0, 1, 2, 3, 4], labels=list(df_models_eval['Model Name']), rotation=0)
 plt.show()
 
 torch.save(model_4.state_dict(), 'resnet18.pt')
-
