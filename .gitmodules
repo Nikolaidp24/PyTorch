@@ -7,3 +7,6 @@
 [submodule "Animals"]
 	path = Animals
 	url = ./Animals
+[submodule "Birds-500"]
+	path = Birds-500
+	url = ./Birds-500
