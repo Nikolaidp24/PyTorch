@@ -1,0 +1,47 @@
+Recommendations on use of the dataset:
+
+This is a very large dataset. It has 475 classes. There are 80,085 training images, 2500 test images  
+and 2,500 validation images. All images are 224 X 224 X 3 jpg format. Because of the size of the dataset  
+it can take a very long time to train. To reduce the training time per epoch you can use a smaller images size but
+that trades off against model accuracy. In my General Image Classifier kernel I used an image size of 224 X 224 
+and seleted the "small" model which is a MobileNetV3-small model. To balance the train set I used augmentation
+so each class had 200 images. With 500 classes X 200 images= 100,000 images are processed for each epoch.
+The model which is included in the dataset as mobilenetv3-small-500-(224 X 224)-98.68.h5 achieved an F1 score on the test
+set of 98.68%. A typical epoch time was about 5.7 minutes. The train set is not balanced. The class with the most files
+has 248 images and the class with the least files has 130 images.
+
+
+One of the deficiencies in the dataset is the ratio of male images to female images. Google and Bing searches tend to  
+include far more images of the male of the species versus that of the female of the species. I estimate that about  
+80% of the images in the dataset are of the male of the species. I therefore expect the models ability to accurately  
+classify an image of a female bird may be significantly lower than the F1 scores the model achieved on the test set.
+
+I have received some comments that the dataset is NOT accurate from the standpoint of scientific identification of a species
+and that is correct. In some case like the species labelled antbird it is not a single species but actually is a family
+containing numerous species. The reson I did this is there are at least 30 species in the family of antbirds. Many are
+essentialy indistinguishable from each other except for a minor difference. For example in one case the difference is simply
+one species has a small color change on part of its chest. If you have training images that don't show the chest then it does not
+contribute to the identification of the specific species. Similarly if you try to classify an antbird image where the 
+image does not show that specifc view it would get misclassified. To avoid these kinds of problems in some case I have 
+families listed as species in the dataset. I tried to create the dataset so that at least it would classify the image 
+to a proper family.
+
+A note for users trying to identify a bird species from photos:
+
+If you see a bird and want to identify its species, it is BEST to take several photos of the bird rather than just one.
+For each image you should use some photo processing software to crop the image so that to the extent possible the cropped
+image maximizes the ratio of pixels of the bird divided by the total number of pixels in the cropped image. 
+You can consider that ratio as equivalent to a signal to noise ratio for the image. In the dataset I cropped all images  
+to maximize this ratio. Note for an image, crop it first then resize it. Included in my General Image Classifier kernel
+is a function called Av_Predictor. This functino classifies images in a directory using the trained model. It has two modes
+of operation. When parameter 'average' is set to False the function classifiess each image individually and prints out the
+results. If average is set to Ture the function classifies each image and sums the probabilities for each predicted class.
+The classs with the highest summed probably is then selected as being the class for ALL images. So if you take several images
+of the same bird use the function to get the class prediction. The prediction will be much more accurate than using just 
+a single image. In the dataset is a directory called images to predict. It contains 5 images of an African Crowned Crane and 
+1 image of a Bald eagle. I use this dataset to demonstrate the operation of the averaging predictor.
+
+A note for users that are using models created with the General Image Classifier kernel. 
+In compiling the model I used a custom metric F1_score. When you save a model then want to reload it you have to declare any
+custom metrics that were used. So model.load would be coded as
+model= keras.models.load_model(model_path, custom_objects={'F1_score':'F1_score'})
